@@ -142,7 +142,7 @@ def mostrar_modulo_pacientes():
         sex_df = sex_counts.reset_index()
         sex_df.columns = ["Sexo", "Ingresos"]
 
-        # Cambiamos mark_bar por mark_arc para crear el donut
+        # Gráfico tipo donut
         chart = alt.Chart(sex_df).mark_arc(innerRadius=60).encode(
             theta=alt.Theta(field="Ingresos", type="quantitative"),
             color=alt.Color(field="Sexo", type="nominal", 
@@ -218,7 +218,7 @@ def mostrar_modulo_diagnosticos():
     df_diag = obtener_top_diagnosticos()
 
     if not df_diag.empty:
-        # Usamos un gráfico de Altair para que sea más profesional que el st.bar_chart simple
+        # Gráfico barras horizontales (Altair)
         chart_top = alt.Chart(df_diag).mark_bar().encode(
             x=alt.X('Ingresos:Q', title="Número de Ingresos"),
             y=alt.Y('Diagnóstico:N', sort='-x', title=""),
@@ -229,7 +229,7 @@ def mostrar_modulo_diagnosticos():
     st.divider()
 
     st.subheader("Búsqueda de diagnóstico")
-
+    #buscador diagnósticos
     lista_diagnosticos = obtener_lista_diagnosticos()
     diagnostico_sel = st.selectbox(
         "Selecciona un diagnóstico",
@@ -259,7 +259,7 @@ def mostrar_modulo_diagnosticos():
     
     st.write(f"### Análisis Demográfico: {diagnostico_sel}")
         
-        # 2. FILA DE DEMOGRAFÍA (Sexo y Edad)
+        # DEMOGRAFÍA (Sexo y Edad)
     col_left, col_right = st.columns(2)
 
     with col_left:
@@ -318,7 +318,7 @@ def mostrar_modulo_diagnosticos():
                 df_comp = obtener_datos_complejidad_diagnostico(diagnostico_sel)
                 
                 if not df_comp.empty:
-                    # Gráfico de dispersión para ver la "fragilidad"
+                    # Gráfico de dispersión para ver "fragilidad"
                     scatter = alt.Chart(df_comp).mark_point(opacity=0.5, color='red').encode(
                         x=alt.X('anchor_age:Q', title="Edad del Paciente"),
                         y=alt.Y('charlson_index:Q', title="Índice de Charlson"),
@@ -332,8 +332,8 @@ def mostrar_modulo_diagnosticos():
 
             with col_b:
                 st.write("**Mortalidad vs. Media**")
-                # Ejemplo de ranking relativo
-                mort_media_global = 15.0  # Este valor vendría de una función global
+            
+                mort_media_global = 15.0  # valor función global
                 mort_actual = resumen['mortalidad_pct']
                 diff = mort_actual - mort_media_global
                 
@@ -341,7 +341,7 @@ def mostrar_modulo_diagnosticos():
                 
                 st.write("---")
                 st.write("**Predicción de Estancia (LOS)**")
-                # Aquí podrías poner el valor medio de estancia que ya tienes
+                
                 st.info(f"Estancia esperada: **{edad_estancia['estancia_media_uci']} días**")
                 st.progress(min(float(edad_estancia['estancia_media_uci']) / 15, 1.0)) # Barra visual hasta 15 días
 
@@ -673,9 +673,9 @@ def mostrar_modulo_ocupacion():
                             value_name="Valor"
                         )
 
-                        # Creamos el gráfico con facetas (facet)
+                        # Creamos el gráfico 
                         chart_bench = alt.Chart(df_long).mark_bar().encode(
-                            # Quitamos la métrica del eje X general y la usamos para separar gráficos
+                            
                             x=alt.X("Unidad UCI:N", title=None, axis=alt.Axis(labels=False)), 
                             y=alt.Y("Valor:Q", title=None),
                             color=alt.Color("Unidad UCI:N", title="Unidad UCI"),
@@ -691,7 +691,7 @@ def mostrar_modulo_ocupacion():
                             column=alt.Column("Métrica:N", title="Indicadores Comparativos"),
                             columns=4 # Alinea los 4 gráficos en una fila
                         ).resolve_scale(
-                            y='independent' # <--- ESTO ES LO MÁS IMPORTANTE: cada eje Y se ajusta a su dato
+                            y='independent' # eje y se ajusta a dato
                         )
 
                         st.altair_chart(chart_bench, use_container_width=True)
@@ -1088,7 +1088,7 @@ def mostrar_modulo_laboratorio():
         #
         if 'df_raw' in locals() or 'df_raw' in globals():
             df_sample = df_raw.sample(n=min(1500, len(df_raw)), random_state=42)
-            # Filtro para sugerencias: solo pacientes con datos completos en las 4 métricas principales
+            # Filtro  sugerencias: solo pacientes con datos completos en las 4 métricas principales (dropna)
             df_completos = df_raw.dropna(subset=['lactate_max', 'creatinine_max', 'wbc_max', 'temperature_max'])
         else:
             df_sample = pd.DataFrame()
@@ -1172,7 +1172,7 @@ def mostrar_modulo_laboratorio():
                 y=alt.Y('density:Q', title="Densidad")
             ).properties(height=300)
 
-            # Solo añadir línea roja si hay paciente y tiene el dato
+            # añadir línea roja si hay paciente y tiene el dato
             if not p_data.empty and pd.notnull(p_data[sel].iloc[0]):
                 val_p = p_data[sel].iloc[0]
                 indicador = alt.Chart(pd.DataFrame({'x': [val_p]})).mark_rule(color='red', size=3).encode(x='x')
@@ -1242,7 +1242,7 @@ def mostrar_modulo_laboratorio():
         df_filtered_global = df_raw[(df_raw[col_to_filter] >= rango[0]) & (df_raw[col_to_filter] <= rango[1])].copy()
         st.info(f"**Análisis de Cohorte:** Estás analizando {len(df_filtered_global)} pacientes.")
     
-        # 2. CONFIGURACIÓN CLÍNICA
+        #CONFIGURACIÓN CLÍNICA
         RANGOS_CLINICOS = {
             'lactate': {'min_normal': 0.5, 'max_normal': 2.0},
             'ph': {'min_normal': 7.35, 'max_normal': 7.45},
@@ -1252,7 +1252,7 @@ def mostrar_modulo_laboratorio():
             'so2': {'min_normal': 95.0, 'max_normal': 100.0}
         }
 
-        # 3. TABS
+        
         tab4, tab5 = st.tabs(["Desviación de la normalidad","Relevancia y Consecuencias"])
 
         
@@ -1265,14 +1265,14 @@ def mostrar_modulo_laboratorio():
             limites = RANGOS_CLINICOS[var_investigada]
             c_min, c_max = f"{var_investigada}_min", f"{var_investigada}_max"
 
-            # --- LÓGICA DE CLASIFICACIÓN ---
+            # CLASIFICACIÓN 
             def clasificar_paciente(row):
                 if pd.isna(row[c_min]) or pd.isna(row[c_max]): return "Sin Datos"
                 if row[c_min] < limites['min_normal']: return "Bajo (Anómalo)"
                 if row[c_max] > limites['max_normal']: return "Alto (Anómalo)"
                 return "Normal"
 
-            # Preparamos los datos
+            # Preparación datos
             df_analisis = df_filtered_global.copy()
             df_analisis['Estado_Clinico'] = df_analisis.apply(clasificar_paciente, axis=1)
             df_analisis = df_analisis[df_analisis['Estado_Clinico'] != "Sin Datos"]
@@ -1359,7 +1359,7 @@ def mostrar_modulo_laboratorio():
                 """)
                 
                 # 
-                st.info(" ¿Quieres profundizar en estos casos? El módulo AKI analiza la producción de orina y estadios de falla.")
+                st.info(" ¿Quieres profundizar en estos casos? El módulo AKI analiza la producción de orina y estados de fallo renal.")
                 
 
             elif var_consecuencia == "lactate":
@@ -1484,11 +1484,11 @@ def mostrar_modulo_ventilacion():
         st.subheader("Permanencia Media por Tipo de Soporte")
         
         chart_duracion = alt.Chart(df_res).mark_bar().encode(
-            # Añadimos format='.1f' al eje X para que los números del eje queden limpios (ej: 12.5)
+            
             x=alt.X("Media_Horas:Q", title="Horas promedio", axis=alt.Axis(format='.1f')),
             y=alt.Y("Estado:N", sort='-x', title=None),
             color=alt.Color("Media_Horas:Q", scale=alt.Scale(scheme='teals')),
-            # Configuramos el tooltip para forzar los dos decimales (.2f) al pasar el ratón
+            
             tooltip=[
                 alt.Tooltip("Estado:N", title="Tipo de Soporte"),
                 alt.Tooltip("Media_Horas:Q", title="Horas Promedio", format=".2f")
