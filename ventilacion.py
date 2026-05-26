@@ -6,7 +6,7 @@ db = client["MIMIC_IV"]
 col_vent = db["icu_ventilation"]
 
 def obtener_datos_ventilacion():
-    # Traemos los campos de tu captura
+    
     query = {
         "_id": 0, "stay_id": 1,
         "ventilation_status": 1, "o2_flow": 1,
@@ -44,7 +44,7 @@ def estadisticas_resumen_vent():
     resumen['Media_Horas'] = resumen['Media_Horas'].fillna(0).astype(float)
     return resumen
 
-col_stay = db["icu_stay"] # Nueva colección necesaria
+col_stay = db["icu_stay"] 
 
 def obtener_datos_escalada():
     """Trae los datos cronológicos para ver cómo cambia el soporte."""
@@ -76,7 +76,7 @@ def obtener_relacion_estancia():
     vent_data = list(col_vent.aggregate(pipeline))
     df_vent = pd.DataFrame(vent_data).rename(columns={"_id": "stay_id"})
     
-    # 2. Traemos la estancia total (los_icu) de la tabla icu_stay
+    # Traemos la estancia total (los_icu) de la tabla icu_stay
     stay_data = list(col_stay.find({}, {"_id":0, "stay_id":1, "los_icu":1})) # 'los' suele estar en días
     df_stay = pd.DataFrame(stay_data)
     
