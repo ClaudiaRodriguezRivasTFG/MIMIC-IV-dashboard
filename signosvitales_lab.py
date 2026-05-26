@@ -35,7 +35,7 @@ def obtener_datos_investigador():
             {
                 "_id": 0,
                 "subject_id": 1,
-                "stay_id": 1,  # <--- CRÍTICO incluirlo aquí
+                "stay_id": 1,  
                 "gender": 1,
                 "anchor_age": 1,
                 "first_careunit": 1
@@ -131,7 +131,7 @@ def obtener_df_para_graficos():
     # Identificamos todas las columnas que terminan en _min o _max
     cols_interes = [c for c in df.columns if c.endswith('_min') or c.endswith('_max')]
     
-    # Formato Tidy para Altair
+    
     df_melted = df.melt(
         id_vars=['subject_id', 'stay_id'],
         value_vars=cols_interes,
@@ -140,7 +140,7 @@ def obtener_df_para_graficos():
     )
     return df_melted
 
-# --- UMBRALES ACTUALIZADOS (ZONAS DE ALERTA MÉDICA) ---
+# UMBRALES (ZONAS DE ALERTA MÉDICA)
 UMBRALES_CRITICOS = {
     'heart_rate_max': {'critico_alto': 130, 'alerta_alto': 110},
     'heart_rate_min': {'critico_bajo': 40, 'alerta_bajo': 50},
