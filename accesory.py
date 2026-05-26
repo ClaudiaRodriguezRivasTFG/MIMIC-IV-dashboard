@@ -179,7 +179,7 @@ def obtener_edad_y_estancia_por_diagnostico(diagnostico):
     df_icu["anchor_age"] = pd.to_numeric(df_icu["anchor_age"], errors="coerce")
     df_icu["los_icu"] = pd.to_numeric(df_icu["los_icu"], errors="coerce")
 
-    # 3. Cruce entre ambas tablas
+    # Cruce entre ambas tablas
     df_merge = pd.merge(df_diag, df_icu, on=["subject_id", "hadm_id"], how="inner")
 
     if df_merge.empty:
@@ -241,7 +241,7 @@ def obtener_sexo_por_diagnostico(diagnostico):
     if not docs_diag:
         return pd.DataFrame(columns=["Sexo", "Valor"])
 
-    # Convertimos a DF y quitamos duplicados de pacientes (un paciente, un sexo)
+    # Convertimos a DF y quitamos duplicados de pacientes 
     df_diag = pd.DataFrame(docs_diag).drop_duplicates(subset=["subject_id","hadm_id"])
 
     # Obtener datos de sexo de la colección patients
@@ -327,69 +327,6 @@ def obtener_evolucion_diagnostico_por_year_group(diagnostico):
     return df_result
 
 
-#Crear colección en Mongo para diagnostico por anchor_year_group
-def crear_top_diagnostico_por_periodo():
-    """
-    Calcula el diagnóstico con más ingresos en cada anchor_year_group
-    y lo guarda en una colección nueva: top_diagnosis_year_group
-    """
-    col_diag = db["diagnosis_icu"]
-    col_icu = db["icu_stay"]
-    col_out = db["top_diagnosis_year_group"]
-
-    # leer solo lo necesario
-    docs_diag = list(
-        col_diag.find(
-            {},
-            {"_id": 0, "subject_id": 1, "hadm_id": 1, "icd_long_title": 1}
-        )
-    )
-
-    docs_icu = list(
-        col_icu.find(
-            {},
-            {"_id": 0, "subject_id": 1, "hadm_id": 1, "anchor_year_group": 1}
-        )
-    )
-
-    if not docs_diag or not docs_icu:
-        return
-
-    df_diag = pd.DataFrame(docs_diag).dropna(subset=["icd_long_title"])
-    df_icu = pd.DataFrame(docs_icu).dropna(subset=["anchor_year_group"])
-
-    # quitar duplicados razonables
-    df_diag = df_diag.drop_duplicates(subset=["subject_id", "hadm_id", "icd_long_title"])
-    df_icu = df_icu.drop_duplicates(subset=["subject_id", "hadm_id"])
-
-    # cruce
-    df_merge = pd.merge(df_diag, df_icu, on=["subject_id", "hadm_id"], how="inner")
-
-    if df_merge.empty:
-        return
-
-    # contar ingresos por periodo y diagnóstico
-    df_count = (
-        df_merge.groupby(["anchor_year_group", "icd_long_title"])
-        .size()
-        .reset_index(name="Ingresos")
-    )
-
-    # quedarnos con el top de cada periodo
-    df_top = (
-        df_count.sort_values(["anchor_year_group", "Ingresos"], ascending=[True, False])
-        .groupby("anchor_year_group", as_index=False)
-        .first()
-    )
-
-    df_top = df_top.rename(columns={
-        "anchor_year_group": "Periodo",
-        "icd_long_title": "Diagnóstico"
-    })
-
-    # guardar en Mongo
-    col_out.delete_many({})
-    col_out.insert_many(df_top.to_dict("records"))
 
 def obtener_top_diagnostico_por_periodo():
     """
@@ -421,7 +358,7 @@ def obtener_datos_complejidad_diagnostico(diagnostico):
     
     df_diag = pd.DataFrame(docs_diag).drop_duplicates(subset=["subject_id", "hadm_id"])
     
-    #  Buscamos edad y charlson en icu_stay (o donde guardes charlson)
+    #  Buscamos edad y charlson en icu_stay 
     docs_icu = list(col_icu.find({}, {"_id": 0, "subject_id": 1, "hadm_id": 1, "anchor_age": 1, "los_icu": 1}))
     df_icu = pd.DataFrame(docs_icu)
     
@@ -459,7 +396,7 @@ def obtener_mortalidad_por_edad(diagnostico):
     df_merge["rango_edad"] = pd.cut(df_merge["anchor_age"], bins=bins, labels=labels)
 
     # Calcular mortalidad por grupo
-    # La media de hospital_expire_flag (0 o 1) multiplicada por 100 da el %
+    # La media de hospital_expire_flag (0 o 1) multiplicada por 100 (%)
     df_mort = df_merge.groupby("rango_edad")["hospital_expire_flag"].mean().reset_index()
     df_mort["hospital_expire_flag"] = (df_mort["hospital_expire_flag"] * 100).round(1)
     df_mort.columns = ["Rango de Edad", "% Mortalidad"]
